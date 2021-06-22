@@ -13,15 +13,20 @@ class FeatureExtractor:
         pass
 
     def transform(self, X):
-        ''' Replace NaN by 0 and flatten the matrix to size (sample, 6720)
-        
+        ''' Replace NaN by 0 and flatten the matrix to size (sample, 6720).
         Executed on every input data (i.e., source, bkg, target) and passed
         the resulting arrays to `fit`and `predict` methods in :class: Classifier
 
-        :param X: dataset of (sample, time, features), i.e., (sample, 672, 10)
-        :type X: ndarray
-        :return: dataset of (sample, 6720)
-        :rtype: ndarray
+        Parameters
+        ----------
+        `X`: ndarray of (sample, 672, 10)
+            3D input dataset(sample, time, features)
+        
+        Returns
+        -------
+        `X`: ndarray of (sample, 6720)
+            The filtered dataset
         '''
         np.nan_to_num(X, copy=False)
+        X = X.reshape(X.shape[0], -1)
         return X
