@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # coding: utf8
-''' Train the model and predict the probability of OAN weak or failure
+''' Train the model and predict the probability of OAN weak and failure
     
     author: Hao BAI
     mail: hao.bai@insa-rouen.fr
+    
+    Copyright (c) 2021 Hao Bai
 '''
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
@@ -16,24 +19,27 @@ from tensorflow.keras import layers
 class Classifier:
 
     def __init__(self):
+        ''' Fully connected deep neural network
+        '''
         model = tf.keras.Sequential()
-        model.add( layers.Flatten(input_shape=(672, 10,), name="Input_Layer") )
+        model.add( layers.Flatten(input_shape=(6720,), name="Input_Layer") )
 
         num_fully_connected_layers = 10
         for i in range(num_fully_connected_layers):
-            model.add( layers.Dense(256, activation="relu", name="Layer{}".format(i+1)) )
+            model.add( layers.Dense(256, activation="relu",
+                                    name="Layer{}".format(i+1)) )
 
         model.add( layers.Dropout(0.5, name="Layer-1"))
-        model.add( layers.Dense(1, activation='softmax', name="Output_Layer") )
-        model.compile(optimizer="Adam",
-            loss='binary_crossentropy',
-            metrics=['acc'])
+        model.add( layers.Dense(1, activation='sigmoid', name="Output_Layer") )
+        model.compile(optimizer="adam",
+              loss='binary_crossentropy',
+              metrics=['acc'])
         self.clf = model
 
 
     def fit(self, X_source, X_source_bkg, X_target, X_target_unlabeled,
             X_target_bkg, y_source, y_target):
-        ''' Fully connected deep neural network
+        ''' Train the model
 
         Parameters
         ----------
@@ -51,10 +57,11 @@ class Classifier:
             labels from targete (city B)
         '''
         # 将数据集转换为TensorFlow格式
-        train_dataset = tf.data.Dataset.from_tensor_slices((X_source, y_source)).batch(16)
-        valid_dataset = tf.data.Dataset.from_tensor_slices((X_target, y_target)).batch(16)
+        train_dataset = tf.data.Dataset.from_tensor_slices((X_source, y_source)
+                                                          ).batch(16)
+        valid_dataset = tf.data.Dataset.from_tensor_slices((X_target, y_target)
+                                                          ).batch(16)
         # 额外操作
-        train_dataset = train_dataset.map( lambda x, y: (tf.image.random_flip_left_right(x), y) )
         train_dataset = train_dataset.repeat()
         valid_dataset = valid_dataset.repeat()
         # 训练模型
@@ -78,7 +85,8 @@ class Classifier:
             The class probabilities of the input samples. The order of the 
             classes corresponds to [0 (weak), 1 (failure)]
         '''
-        y_proba = self.clf.predict(X_target)
+        y_pred = self.clf.predict(X_target)
+        y_proba = np.hstack([1-y_pred, y_pred])
         return y_proba
 
 
@@ -86,11 +94,13 @@ class Classifier:
 #!------------------------------------------------------------------------------
 #!                                     FUNCTION
 #!------------------------------------------------------------------------------
+def main():
+    pass
 
 
 
 #!------------------------------------------------------------------------------
 #!                                     TESTING
 #!------------------------------------------------------------------------------
-
-
+if __name__ == "__main__":
+    main()
