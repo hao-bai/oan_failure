@@ -22,15 +22,16 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)  # revert to the origin workinng path
 
-def load_all_dataset():
+def load_all_dataset(show=True):
     with cd("~/Codes/HuaweiRAMP"):
         problem = rw.utils.assert_read_problem()
-        X_train, y_train = problem.get_train_data()
-        X_test, y_test = problem.get_test_data()
+        X_train, y_train = problem.get_train_data(show=show)
+        X_test, y_test = problem.get_test_data(show=show)
     return X_train, y_train, X_test, y_test
 
 def rename_dataset(fe, X_train, y_train, X_test, y_test, show_imbalance=False):
-    # 重命名
+    ''' 对所有数据集进行 Feature Extract 并重命名变量
+    '''
     from copy import deepcopy
     # 训练集
     print("==== TRAIN SET ====")
@@ -63,7 +64,7 @@ def rename_dataset(fe, X_train, y_train, X_test, y_test, show_imbalance=False):
     print("  | X_target_unlabeled:", X_target_unlabeled.shape)
     # 测试集
     print("==== TEST SET ====")
-    X_test.target = fe.transform(X_test.target)
+    X_test.target = deepcopy( fe.transform(X_test.target) )
     print("  | X_test.target:", X_test.target.shape, end=" ; ")
     print("y_test.target:", y_test.target.shape)
     if show_imbalance:
@@ -72,7 +73,7 @@ def rename_dataset(fe, X_train, y_train, X_test, y_test, show_imbalance=False):
         total = y_test.target.shape[0]
         print("  | \timbalance: {}({:.1f}%) failure, {}({:.1f}%) weak".format(
             tmp1, tmp1/total*100, tmp0, tmp0/total*100, ))
-    X_test.target_bkg = fe.transform(X_test.target_bkg)
+    X_test.target_bkg = deepcopy( fe.transform(X_test.target_bkg) )
     print("B | X_test.target_bkg:", X_test.target_bkg.shape)
     print("  | X_test.target_unlabeled:", X_test.target_unlabeled)
     return [X_source, X_source_bkg, X_target, X_target_unlabeled,

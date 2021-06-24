@@ -93,7 +93,7 @@ def _read_data(x, y):
         return x[~idx], x[idx], x_bkg, y[~idx].astype(np.int)
 
 
-def get_train_data(path='.'):
+def get_train_data(path='.', show=True):
     print('Train data')
     # Source
     source_path = os.path.join(path, source_data_path, 'ramp_train.pickle')
@@ -110,11 +110,11 @@ def get_train_data(path='.'):
     X = utils.dataset.OpticalDataset(
         source, source_bkg, target, target_unlabeled, target_bkg)
     y = utils.dataset.OpticalLabels(y_source, y_target)
-
-    print(X, y)
+    if show == True:
+        print(X, y)
     return X, y
 
-def get_test_data(path='.'):
+def get_test_data(path='.', show=True):
     print('Test data')
     test_path = os.path.join(path, target_data_path, 'ramp_test.pickle')
     X_test, y_test = _fetch_data(test_path)
@@ -126,13 +126,13 @@ def get_test_data(path='.'):
 
     X = utils.dataset.OpticalDataset(None, None, test, None, test_bkg)
     y = utils.dataset.OpticalLabels(None, y_test)
-
-    print(X, y)
+    if show == True:
+        print(X, y)
     return X, y
 
 
-def get_cv(X, y):
+def get_cv(X, y, n_splits=10):
     cv = utils.cv.TLShuffleSplit(
-        n_splits=10, test_size=0.2, random_state=42,
+        n_splits=n_splits, test_size=0.2, random_state=42,
         train_size_labeled_target=20)
     return cv.split(X, y)
