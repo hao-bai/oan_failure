@@ -9,6 +9,7 @@
 '''
 from sklearn.ensemble import RandomForestClassifier
 import imblearn as il
+import numpy as np
 
 
 
@@ -45,14 +46,22 @@ class Classifier:
         `y_target`: ndarray of (sample, )
             labels from targete (city B)
         '''
-        # Oversampling & undersampling
-        over = il.over_sampling.RandomOverSampler(sampling_strategy=self.sampling_strategy_over)
-        X_source, y_source = over.fit_resample(X_source, y_source)
+        ## Deal with NaN
+        # X_source, y_source = self.preprocess(X_source, y_source)
+        # X_target, y_target = self.preprocess(X_target, y_target)
+        # X_source_bkg = self.preprocess(X_source_bkg)
+        # X_target_unlabeled = self.preprocess(X_target_unlabeled)
+        # X_target_bkg = self.preprocess(X_target_bkg)
+
+
+        ## Oversampling & undersampling
+        # over = il.over_sampling.RandomOverSampler(sampling_strategy=self.sampling_strategy_over)
+        # X_source, y_source = over.fit_resample(X_source, y_source)
         
-        under = il.under_sampling.RandomUnderSampler(sampling_strategy=self.sampling_strategy_under) # 0.2 or 0.3
+        # under = il.under_sampling.RandomUnderSampler(sampling_strategy=self.sampling_strategy_under) # 0.2 or 0.3
         # under = il.under_sampling.AllKNN(sampling_strategy=self.sampling_strategy) # ValueError: 'clean-sampling' methods do let the user specify the sampling ratio
         # under = il.under_sampling.TomekLinks(sampling_strategy=self.sampling_strategy) # long time
-        X_source, y_source = under.fit_resample(X_source, y_source)
+        # X_source, y_source = under.fit_resample(X_source, y_source)
         
         # Train the model
         self.clf.fit(X_source, y_source)
@@ -76,6 +85,83 @@ class Classifier:
         '''
         y_proba = self.clf.predict_proba(X_target)
         return y_proba
+
+
+    def preprocess(self, X, label=None):
+        ''' Deal with NaN
+        '''
+        new_X = []
+        if label is None:
+            for i in range(X.shape[0]):
+                x = X[i]
+                indice = ~np.isfinite(x)
+                
+                # Columns with full Nan
+                col_is_nan = np.all(indice, axis=0)
+                if (col_is_nan == True).any():
+                    continue
+                
+                # Rows with full Nan
+                row_is_nan = np.all(indice, axis=1)
+                if (row_is_nan == True).any():
+                    row = np.where(row_is_nan == True)[0]
+                    # x = np.delete(x, row, axis=0) # leads to diff dim
+                    if len(row) >= x.shape[0]/4: # drop sample, /2=85%+, /4=75%+
+                        continue
+                
+                # Columns with partial NaN
+                part_is_nan = np.any(indice, axis=0)
+                if (part_is_nan == True).any():
+                    col = np.where(part_is_nan == True)[0]
+                    # part_nan[i] = col[0]
+                    for c in col:
+                        this = x[:,c]
+                        finite = this[np.isfinite(this)]
+                        fill = np.repeat(finite, np.ceil(len(this)/len(finite)))[:len(this)]
+                        x[:,c] = np.where(np.isfinite(this), this, fill)
+                
+                # Construct new array
+                new_X.append(x)
+            X = np.array(new_X)
+            X = X.reshape(X.shape[0], -1)
+            return X
+        
+        else:
+            new_y = []
+            for i in range(X.shape[0]):
+                x = X[i]
+                y = label[i]
+                indice = ~np.isfinite(x)
+                
+                # Columns with full Nan
+                col_is_nan = np.all(indice, axis=0)
+                if (col_is_nan == True).any():
+                    continue
+                
+                # Rows with full Nan
+                row_is_nan = np.all(indice, axis=1)
+                if (row_is_nan == True).any():
+                    row = np.where(row_is_nan == True)[0]
+                    # x = np.delete(x, row, axis=0) # leads to diff dim
+                    if len(row) >= x.shape[0]/4: # drop sample, /2=85%+, /4=75%+
+                        continue
+                
+                # Columns with partial NaN
+                part_is_nan = np.any(indice, axis=0)
+                if (part_is_nan == True).any():
+                    col = np.where(part_is_nan == True)[0]
+                    for c in col:
+                        this = x[:,c]
+                        finite = this[np.isfinite(this)]
+                        fill = np.repeat(finite, np.ceil(len(this)/len(finite)))[:len(this)]
+                        x[:,c] = np.where(np.isfinite(this), this, fill)
+                
+                # Construct new array
+                new_X.append(x)
+                new_y.append(y)
+            X, y = np.array(new_X), np.array(new_y)
+            X = X.reshape(X.shape[0], -1)
+            return X, y
 
 
 
