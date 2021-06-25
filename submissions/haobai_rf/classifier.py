@@ -17,13 +17,14 @@ import imblearn as il
 #!------------------------------------------------------------------------------
 class Classifier:
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         ''' Random Forest
         '''
         model = RandomForestClassifier(
-            n_estimators=2, max_depth=2, random_state=44, n_jobs=-1)
+            n_estimators=2, max_depth=2, n_jobs=-1)
         self.clf = model
-
+        self.sampling_strategy_over = kwargs.get("sampling_strategy_over", None)
+        self.sampling_strategy_under = kwargs.get("sampling_strategy_under", None)
 
     def fit(self, X_source, X_source_bkg, X_target, X_target_unlabeled,
             X_target_bkg, y_source, y_target):
@@ -45,12 +46,14 @@ class Classifier:
             labels from targete (city B)
         '''
         # Oversampling & undersampling
-        # over = il.over_sampling.SMOTE(sampling_strategy=0.5) # minority/majority ratio
-        # X_source, y_source = over.fit_resample(X_source, y_source)
-        # under = il.under_sampling.RandomUnderSampler(sampling_strategy=1.0)
-        # X_source, y_source = under.fit_resample(X_source, y_source)
-        over = il.over_sampling.ADASYN()
+        over = il.over_sampling.RandomOverSampler(sampling_strategy=self.sampling_strategy_over)
         X_source, y_source = over.fit_resample(X_source, y_source)
+        
+        under = il.under_sampling.RandomUnderSampler(sampling_strategy=self.sampling_strategy_under) # 0.2 or 0.3
+        # under = il.under_sampling.AllKNN(sampling_strategy=self.sampling_strategy) # ValueError: 'clean-sampling' methods do let the user specify the sampling ratio
+        # under = il.under_sampling.TomekLinks(sampling_strategy=self.sampling_strategy) # long time
+        X_source, y_source = under.fit_resample(X_source, y_source)
+        
         # Train the model
         self.clf.fit(X_source, y_source)
 
