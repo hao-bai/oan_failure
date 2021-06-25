@@ -21,9 +21,8 @@ class Classifier:
         ''' Random Forest
         '''
         model = RandomForestClassifier(
-            n_estimators=2, max_depth=2, random_state=44, n_jobs=-1)
+            n_estimators=2, max_depth=2, n_jobs=-1)
         self.clf = model
-        self.sampling_strategy = kwargs.get("sampling_strategy", None)
 
 
     def fit(self, X_source, X_source_bkg, X_target, X_target_unlabeled,
@@ -44,16 +43,7 @@ class Classifier:
             labels from source (city A)
         `y_target`: ndarray of (sample, )
             labels from targete (city B)
-        '''
-        # Oversampling & undersampling
-        # over = il.over_sampling.RandomOverSampler(sampling_strategy=0.3)
-        # X_source, y_source = over.fit_resample(X_source, y_source)
-        
-        # under = il.under_sampling.RandomUnderSampler(sampling_strategy=self.sampling_strategy) # 0.2 or 0.3
-        # under = il.under_sampling.AllKNN(sampling_strategy=self.sampling_strategy) # ValueError: 'clean-sampling' methods do let the user specify the sampling ratio
-        # under = il.under_sampling.TomekLinks(sampling_strategy=self.sampling_strategy) # long time
-        # X_source, y_source = under.fit_resample(X_source, y_source)
-        
+        '''        
         # Train the model
         self.clf.fit(X_source, y_source)
 
