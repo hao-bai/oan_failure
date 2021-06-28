@@ -21,8 +21,11 @@ class Classifier:
     def __init__(self, **kwargs):
         ''' Random Forest
         '''
+        est, dep, leaf =100, 5, 5
+        print("n_estimators", est, "max_depth", dep, "min_samples_leaf", leaf)
         model = RandomForestClassifier(
-            n_estimators=2, max_depth=2, n_jobs=-1)
+            n_estimators=est, max_depth=dep, min_samples_leaf=leaf,
+            random_state=44, n_jobs=-1)
         self.clf = model
         self.sampling_strategy_over = kwargs.get("sampling_strategy_over", None)
         self.sampling_strategy_under = kwargs.get("sampling_strategy_under", None)

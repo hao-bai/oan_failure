@@ -22,7 +22,7 @@ class Classifier:
         ''' Fully connected deep neural network
         '''
         model = tf.keras.Sequential()
-        model.add( layers.Flatten(input_shape=(6720,), name="Input_Layer") )
+        model.add( layers.Flatten(input_shape=(6048,), name="Input_Layer") )
 
         num_fully_connected_layers = 10
         for i in range(num_fully_connected_layers):
@@ -33,7 +33,7 @@ class Classifier:
         model.add( layers.Dense(1, activation='sigmoid', name="Output_Layer") )
         model.compile(optimizer="adam",
               loss='binary_crossentropy',
-              metrics=['acc'])
+              metrics=[tf.keras.metrics.Precision(), "acc"])
         self.clf = model
 
 
@@ -56,15 +56,16 @@ class Classifier:
         `y_target`: ndarray of (sample, )
             labels from targete (city B)
         '''
-        # 将数据集转换为TensorFlow格式
+        #* Transform into tensors
         train_dataset = tf.data.Dataset.from_tensor_slices((X_source, y_source)
-                                                          ).batch(16)
+                                                          ).batch(32)
         valid_dataset = tf.data.Dataset.from_tensor_slices((X_target, y_target)
-                                                          ).batch(16)
-        # 额外操作
+                                                          ).batch(32)
+        #* Additional operations
+        # Avoid "WARNING:tensorflow:Your input ran out of data;"
         train_dataset = train_dataset.repeat()
         valid_dataset = valid_dataset.repeat()
-        # 训练模型
+        #* Train the model
         self.clf.fit(train_dataset, epochs=100, steps_per_epoch=200,
             validation_data=valid_dataset, validation_steps=3, )
 

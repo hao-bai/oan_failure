@@ -100,8 +100,9 @@ class FeatureExtractor:
                 for c in col:
                     value = np.random.choice(candidate_mean[c])
                     x = np.nan_to_num(x, nan=value)
+            # X2.extend(np.split(x, 7)) # split weekly data into daily
             X2.append(x)
-        
+
         X = np.array(X2)
 
         ## Final
